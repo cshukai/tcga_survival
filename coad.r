@@ -54,5 +54,10 @@ colnames(tumor_avg)=c("barcode","tumor_avg")
 tum_str=merge(tumor_avg,stroma_avg)
 st_ratio=as.numeric(as.character(tum_str[,3]))/as.numeric(as.character(tum_str[,2]))
 tum_str=cbind(tum_str,st_ratio)
+
 clin=survivalTCGA(COAD.clinical)
+clin[,"bcr_patient_barcode"]=tolower(clin[,"bcr_patient_barcode"])
+colnames(clin)[2]="barcode"
+
+sur_tum_str=merge(clin,tum_str)
 save.image("tumorstroma.RData")
