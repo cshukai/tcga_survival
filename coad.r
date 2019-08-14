@@ -1,6 +1,7 @@
 library(RTCGA)
 library(RTCGA.clinical)
-
+library(survival)
+library(survminer)
 #################################STROMA#################################
  
 stromaIdx=colnames(COAD.clinical)[grep(x=colnames(COAD.clinical),pattern="stroma")] # find where stroma -related colnames are
@@ -60,4 +61,12 @@ clin[,"bcr_patient_barcode"]=tolower(clin[,"bcr_patient_barcode"])
 colnames(clin)[2]="barcode"
 
 sur_tum_str=merge(clin,tum_str)
+group =ifelse(sur_tum_str$st_ratio>median(sur_tum_str$st_ratio),'high','low')
+
+sfit =survfit(Surv(times, patient.vital_status)~group, data=sur_tum_str)
+summary(sfit)
+ggsurvplot(sfit, conf.int=F, pval=TRUE)
+
+
+
 save.image("tumorstroma.RData")
