@@ -25,7 +25,7 @@ for(i in 1:nrow(COAD.clinical)){
   
 }
 stroma_avg=stroma_avg[-which(stroma_avg[,2]=="-1"),]
-
+colnames(stroma_avg)=c("barcode","str_avg")
 #########################TUMOR ######################
 tumorCols=colnames(COAD.clinical)[intersect(grep(x=colnames(COAD.clinical),pattern="percent_tumor_cells"),grep(x=colnames(COAD.clinical),pattern="slide"))]
 
@@ -49,7 +49,10 @@ for(i in 1:nrow(COAD.clinical)){
   
 }
 tumor_avg=tumor_avg[-which(tumor_avg[,2]=="-1"),]
-############################ x=colnames(COAD.clinical),pattern="stroma"tumor/stroma for survival####################################
+colnames(tumor_avg)=c("barcode","tumor_avg")
+############################ tumor/stroma for survival####################################
+tum_str=merge(tumor_avg,stroma_avg)
+st_ratio=as.numeric(as.character(tum_str[,3]))/as.numeric(as.character(tum_str[,2]))
+tum_str=cbind(tum_str,st_ratio)
 clin=survivalTCGA(COAD.clinical)
-
 save.image("tumorstroma.RData")
