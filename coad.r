@@ -70,7 +70,6 @@ ggsurvplot(sfit, conf.int=F, pval=TRUE)
 
 ########################other image features  #################################
 features=c("percent_granulocyte_infiltration", "percent_inflam_infiltration", "percent_lymphocyte_infiltration", "percent_monocyte_infiltration", "percent_necrosis", "percent_neutrophil_infiltration")
-
 for(i in 1:length(features)){
   interestingCols=colnames(COAD.clinical)[intersect(grep(x=colnames(COAD.clinical),pattern=features[i]),grep(x=colnames(COAD.clinical),pattern="slide"))]
   avg=NULL
@@ -105,7 +104,8 @@ for(i in 1:length(features)){
   sfit =survfit(Surv(times, patient.vital_status)~group, data=sur_avg)
   summary(sfit)
   surv_pvalue(sfit)$pval
-  ggsurvplot(sfit, conf.int=F, pval=TRUE,title=features[i])
+  gg=ggsurvplot(sfit, conf.int=F, pval=TRUE,title=features[i])
+  ggsave( paste(features[i],"jpg",sep="."), plot=print(gg), width = 3.3, height = 2.2, dpi = 1000 )
   
   if(surv_pvalue(sfit)$pval < 0.05) {
     print(features[i])
