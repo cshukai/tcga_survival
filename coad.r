@@ -93,17 +93,26 @@ for(i in 1:length(features)){
     
   }
   avg=avg[-which(avg[,2]=="-1"),]
+  if(nrow(avg)<5){
+     print(paste(features[i],"bad",sep="-"))
+     next 
+  }
+  
+  colnames(avg)=c("barcode","avg")
+  sur_avg=merge(clin,avg)
+  sur_avg$avg=as.numeric(as.character(sur_avg$avg))
+  group =ifelse(sur_avg$avg>median(sur_avg$avg),'high','low')
+  sfit =survfit(Surv(times, patient.vital_status)~group, data=sur_avg)
+  summary(sfit)
+  surv_pvalue(sfit)$pval
+  ggsurvplot(sfit, conf.int=F, pval=TRUE,title=features[i])
+  
+  if(surv_pvalue(sfit)$pval < 0.05) {
+    print(features[i])
+  }
   
   
 }
-#"patient.samples.sample-2.portions.portion.slides.slide.percent_necrosis"
-#"patient.samples.sample.portions.portion.slides.slide.percent_eosinophil_infiltration"[1]
-#[1]https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4848192/
-[220] "patient.samples.sample.portions.portion.slides.slide.percent_granulocyte_infiltration"
-[221] "patient.samples.sample.portions.portion.slides.slide.percent_inflam_infiltration"
-[222] "patient.samples.sample.portions.portion.slides.slide.percent_lymphocyte_infiltration"
-[223] "patient.samples.sample.portions.portion.slides.slide.percent_monocyte_infiltration"
-[224] "patient.samples.sample.portions.portion.slides.slide.percent_necrosis"
-[225] "patient.samples.sample.portions.portion.slides.slide.percent_neutrophil_infiltration"
+
 
 save.image("tumorstroma.RData")
