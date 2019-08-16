@@ -69,6 +69,7 @@ surv_pvalue(sfit)$pval
 ggsurvplot(sfit, conf.int=F, pval=TRUE)
 
 ########################other image features  #################################
+pdf("surplots.pdf")
 features=c("percent_granulocyte_infiltration", "percent_inflam_infiltration", "percent_lymphocyte_infiltration", "percent_monocyte_infiltration", "percent_necrosis", "percent_neutrophil_infiltration")
 for(i in 1:length(features)){
   interestingCols=colnames(COAD.clinical)[intersect(grep(x=colnames(COAD.clinical),pattern=features[i]),grep(x=colnames(COAD.clinical),pattern="slide"))]
@@ -105,8 +106,8 @@ for(i in 1:length(features)){
   summary(sfit)
   surv_pvalue(sfit)$pval
   gg=ggsurvplot(sfit, conf.int=F, pval=TRUE,title=features[i])
-  ggsave( paste(features[i],"jpg",sep="."), plot=print(gg), width = 3.3, height = 2.2, dpi = 1000 )
-  
+  #ggsave( paste(features[i],"jpg",sep="."), plot=print(gg), width = 3.3, height = 2.2, dpi = 1000 )
+  print(gg)
   if(surv_pvalue(sfit)$pval < 0.05) {
     print(features[i])
   }
@@ -114,5 +115,5 @@ for(i in 1:length(features)){
   
 }
 
-
+dev.off()
 save.image("tumorstroma.RData")
