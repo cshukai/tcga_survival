@@ -62,15 +62,16 @@ colnames(clin)[2]="barcode"
 
 sur_tum_str=merge(clin,tum_str)
 group =ifelse(sur_tum_str$st_ratio>median(sur_tum_str$st_ratio),'high','low')
-
+group=ifelse(sur_tum_str$st_ratio>0.5,'high','low')
+pdf("surplots.pdf")
 sfit =survfit(Surv(times, patient.vital_status)~group, data=sur_tum_str)
 summary(sfit)
 surv_pvalue(sfit)$pval
-ggsurvplot(sfit, conf.int=F, pval=TRUE)
+gg=ggsurvplot(sfit, conf.int=F, pval=TRUE,title="stroma-tumor ratio")
+print(gg)
 
 ########################other image features  #################################
-pdf("surplots.pdf")
-features=c("percent_granulocyte_infiltration", "percent_inflam_infiltration", "percent_lymphocyte_infiltration", "percent_monocyte_infiltration", "percent_necrosis", "percent_neutrophil_infiltration")
+features=c("percent_tumor_nuclei","percent_tumor_cells","percent_stromal_cells","percent_tumor_nuclei","percent_granulocyte_infiltration", "percent_inflam_infiltration", "percent_lymphocyte_infiltration", "percent_monocyte_infiltration", "percent_necrosis", "percent_neutrophil_infiltration")
 for(i in 1:length(features)){
   interestingCols=colnames(COAD.clinical)[intersect(grep(x=colnames(COAD.clinical),pattern=features[i]),grep(x=colnames(COAD.clinical),pattern="slide"))]
   avg=NULL
