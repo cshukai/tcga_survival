@@ -352,5 +352,92 @@ for(i in 1:length(features)){
 }
 
 dev.off()
-save.image("tumorstroma.RData")
+
+############################CD3 CD8 effector stage ############################################
+library(RTCGA.mRNA)
+clin=survivalTCGA(COAD.clinical)
+gene_expr=COAD.mRNA[,c("bcr_patient_barcode","CEACAM8","SUV39H1","GZMB", "PRF1", "FASLG")]
+
+clin_gxpr=NULL
+for(i in 1:nrow(clin)){
+  this_barcode=clin[i,"bcr_patient_barcode"]
+  these_expr=gene_expr[grep(x=gene_expr[,"bcr_patient_barcode"],pattern=this_barcode),]
+  if(nrow(these_expr)>0){
+    this_row=cbind(clin[i,],these_expr[,c("CEACAM8","SUV39H1","GZMB", "PRF1", "FASLG")])
+    clin_gxpr=rbind(clin_gxpr,this_row)
+  }
+}
+#suv_idx=which(clin_gxpr[,"SUV39H1"]>median(clin_gxpr[,"SUV39H1"]))
+#gzmb_idx=which(clin_gxpr[,"GZMB"]>median(clin_gxpr[,"GZMB"]))
+#prf_idx=which(clin_gxpr[,"PRF1"]>median(clin_gxpr[,"PRF1"]))
+#FA_idx=which(clin_gxpr[,"FASLG"]>median(clin_gxpr[,"FASLG"]))
+#cd66bIdx=which(clin_gxpr[,"CEACAM8"]>median(clin_gxpr[,"CEACAM8"]))
+clin_gxpr2=clin_gxpr
+colnames(clin_gxpr2)[2]="barcode"
+clin_gxpr2[,"barcode"]=tolower(clin_gxpr2[,"barcode"])
+pdf("imgexpr.pdf")
+features=c("percent_tumor_nuclei","percent_tumor_cells","percent_stromal_cells","percent_tumor_nuclei","percent_granulocyte_infiltration", "percent_inflam_infiltration", "percent_lymphocyte_infiltration", "percent_monocyte_infiltration", "percent_necrosis", "percent_neutrophil_infiltration")
+for(i in 1:length(features)){
+  interestingCols=colnames(COAD.clinical.1to3)[intersect(grep(x=colnames(COAD.clinical.1to3),pattern=features[i]),grep(x=colnames(COAD.clinical.1to3),pattern="slide"))]
+  avg=NULL
+  for(j in 1:nrow(COAD.clinical.1to3)){
+    reps=0
+    percents=0
+    this_avg=-1
+    for(k in 1:length(interestingCols)){
+      this_percent=COAD.clinical.1to3[j,interestingCols[k]]
+      if(!is.na(this_percent)){
+        percents=percents+as.numeric(this_percent)
+        reps=reps+1
+      }
+    }
+    if(reps>0){
+      this_avg=percents/reps
+    }
+    this_row=cbind(COAD.clinical.1to3[j,"patient.bcr_patient_barcode"],this_avg)
+    avg=rbind(avg,this_row)
+    
+  }
+  avg=avg[-which(avg[,2]=="-1"),]
+  if(nrow(avg)<5){
+    print(paste(features[i],"bad",sep="-"))
+    next 
+  }
+  
+  colnames(avg)=c("barcode","avg")
+  sur_avg=merge(clin_gxpr2,avg)
+  sur_avg$avg=as.numeric(as.character(sur_avg$avg))
+  #group =ifelse(sur_avg$avg>median(sur_avg$avg),'high','low')
+  group=NULL
+  for(k in 1:nrow(sur_avg)){
+   this_avg=sur_avg[k,"avg"]
+   this_gene=sur_avg[k,"SUV39H1"]
+   if(this_avg>median(sur_avg[,"avg"]) && this_gene<median(sur_avg[,"SUV39H1"])){
+     this_cat="high"
+   }
+   else{
+     this_cat="low"
+       
+     } 
+   group=c(group,this_cat)
+   }
+   
+  }
+  sfit =survfit(Surv(times, patient.vital_status)~group, data=sur_avg)
+  summary(sfit)
+  surv_pvalue(sfit)$pval
+  gg=ggsurvplot(sfit, conf.int=F, pval=TRUE,title=features[i])
+  #ggsave( paste(features[i],"jpg",sep="."), plot=print(gg), width = 3.3, height = 2.2, dpi = 1000 )
+  print(gg)
+  if(surv_pvalue(sfit)$pval < 0.05) {
+    print(features[i])
+  }
+  
+  
+
+
+dev.off()
+
+
+save.image("tumorstroma.RData") 
 
